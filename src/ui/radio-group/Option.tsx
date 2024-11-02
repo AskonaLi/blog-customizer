@@ -8,9 +8,9 @@ import styles from './RadioGroup.module.scss';
 type OptionProps = {
 	value: OptionType['value'];
 	title: OptionType['title'];
-	selected: OptionType;
+	selected: OptionType | null;
 	groupName: string;
-	onChange?: (option: OptionType) => void;
+	onChange?: (option: OptionType | null) => void;
 	option: OptionType;
 };
 
@@ -19,21 +19,28 @@ export const Option = (props: OptionProps) => {
 
 	const optionRef = useRef<HTMLDivElement>(null);
 
-	const handleChange = () => onChange?.(option);
+	const handleChange = () => {
+		onChange?.(selected?.title === value ? null : option);
+	};
 
 	useEnterSubmit({ onChange, option });
 
 	const inputId = `${groupName}_radio_item_with_value__${value}`;
-	const isChecked = value === selected.title;
+	const isChecked = !!selected && value === selected.title;
 
 	return (
 		<div
 			className={styles.item}
-			key={value}
 			data-checked={isChecked}
 			data-testid={inputId}
 			tabIndex={0}
-			ref={optionRef}>
+			ref={optionRef}
+			role='radio'
+			aria-checked={isChecked}
+			onClick={handleChange}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter') handleChange();
+			}}>
 			<input
 				className={styles.input}
 				type='radio'
@@ -42,6 +49,7 @@ export const Option = (props: OptionProps) => {
 				value={value}
 				onChange={handleChange}
 				tabIndex={-1}
+				checked={isChecked}
 			/>
 			<label className={styles.label} htmlFor={inputId}>
 				<Text size={18} uppercase>
